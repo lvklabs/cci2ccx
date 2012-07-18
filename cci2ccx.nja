@@ -1,0 +1,7 @@
+{
+  "venv": "", 
+  "project-type": "Import from sources", 
+  "name": "cci2ccx", 
+  "license": "GNU General Public License v3", 
+  "description": "Cocos2d-iphone to Cocos2d-x translator"
+}
