@@ -7,5 +7,4 @@ Run:
   Limitations:
 
     * Only converts headers files. 
-    * Does not convert class methods.
 

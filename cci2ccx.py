@@ -16,18 +16,37 @@ def add_macro_guard(s, filename):
     return cpp
 
 
-def parse_class_decl(s):
-    class_decl_regex = r"(?P<head>.*?)"
-    class_decl_regex += r"@interface\s+(?P<class_name>\w+)"    # class name
-    class_decl_regex += r"\s*:\s*(?P<super_class>\w+)\s*"      # super class
-    class_decl_regex += r"({(?P<class_attrs>[^}]*)})?"         # class attributes
-    class_decl_regex += r"(?P<class_methods>.*?)"              # class methods
-    class_decl_regex += r"@end"                                # class end
-    class_decl_regex += r"(?P<tail>.*)"
+def parse_method_params_decl(s, a):
+    method_params_regex = r"\s*"
+    method_params_regex += r"(?P<method_name_cont>\w*)\s*:\s*"        # method name continuation
+    method_params_regex += r"\((?P<param_type>\w+)\)\s*"              # parameter type
+    method_params_regex += r"(?P<param_name>\w+)"                     # parameter name
+    method_params_regex += r"(?P<tail>.*)"
 
-    m = re.search(class_decl_regex, s, re.DOTALL)
+    m = re.search(method_params_regex, s, re.DOTALL)
 
-    return m
+    if m:
+        d = m.groupdict()
+
+        tail = d.pop("tail")
+
+        a.append(d)
+
+        parse_method_params_decl(tail, a)
+
+
+def to_cpp_method_params_decl(d):
+    s = d["params"]
+    pdecls = []
+    parse_method_params_decl(s, pdecls)
+
+    cpp = ""
+    for pdecl in pdecls:
+        if cpp != "":
+            cpp += ", "
+        cpp += "{param_type} {param_name}".format(**pdecl)
+
+    d["params"] = cpp
 
 
 def parse_class_methods_decl(s, a):
@@ -43,31 +62,48 @@ def parse_class_methods_decl(s, a):
     if m:
         d = m.groupdict()
 
+        tail = d.pop("tail")
+
         if d["type"] == "+":
             d["type"] = "static "
         else:
             d["type"] = ""
 
-        tail = d.pop("tail")
+        to_cpp_method_params_decl(d)
+
         a.append(d)
 
         parse_class_methods_decl(tail, a)
 
 
-def expand_cpp_class_methods_decl(d):
+def to_cpp_class_methods_decl(d):
     s = d["class_methods"]
-    a = []
-    parse_class_methods_decl(s, a)
+    mdecls = []
+    parse_class_methods_decl(s, mdecls)
 
     cpp = ""
-    for mdecl in a:
-        cpp += "    {type}{return_type} {name}(/* FIXME {params} */);\n".format(**mdecl)
+    for mdecl in mdecls:
+        cpp += "    {type}{return_type} {name}({params});\n".format(**mdecl)
 
     d["class_methods"] = cpp
 
 
-def expand_cpp_class_decl(d):
-    expand_cpp_class_methods_decl(d)
+def parse_class_decl(s):
+    class_decl_regex = r"(?P<head>.*?)"
+    class_decl_regex += r"@interface\s+(?P<class_name>\w+)"    # class name
+    class_decl_regex += r"\s*:\s*(?P<super_class>\w+)\s*"      # super class
+    class_decl_regex += r"({(?P<class_attrs>[^}]*)})?"         # class attributes
+    class_decl_regex += r"(?P<class_methods>.*?)"              # class methods
+    class_decl_regex += r"@end"                                # class end
+    class_decl_regex += r"(?P<tail>.*)"
+
+    m = re.search(class_decl_regex, s, re.DOTALL)
+
+    return m
+
+
+def to_cpp_class_decl(d):
+    to_cpp_class_methods_decl(d)
 
     cpp = """
 using namespace cocos2d;
@@ -103,9 +139,10 @@ def cci2ccx():
     while objc != "":
         m = parse_class_decl(objc)
         if m:
-            cpp += m.group("head")
-            cpp += expand_cpp_class_decl(m.groupdict())
-            objc = m.group("tail")
+            d = m.groupdict()
+            cpp += d.pop("head")
+            cpp += to_cpp_class_decl(d)
+            objc = d.pop("tail")
         else:
             cpp += objc
             objc = ""
