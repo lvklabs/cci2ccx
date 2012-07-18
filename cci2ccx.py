@@ -43,7 +43,7 @@ def parse_class_methods_decl(s, a):
     if m:
         d = m.groupdict()
 
-        if d["type"] == "-":
+        if d["type"] == "+":
             d["type"] = "static "
         else:
             d["type"] = ""
@@ -76,10 +76,10 @@ class {class_name} : public {super_class}
 {{
 {class_attrs}
 public:
-   bool virtual init();
-   static class_name* create();
+    bool virtual init();
+    static class_name* create();
 
-    {class_methods}
+{class_methods}
 
 }};
 """.format(**d)
