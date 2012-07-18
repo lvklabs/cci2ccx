@@ -116,23 +116,16 @@ public:
     static class_name* create();
 
 {class_methods}
-
 }};
 """.format(**d)
 
     return cpp
 
 
-def cci2ccx():
-    if len(sys.argv) != 2:
-        print "Syntax: " + sys.argv[0] + " <header_file>"
-        return 1
-
-    filename = sys.argv[1]
-
+def translate_header(filename):
     f = open(filename, 'r')
-
     objc = f.read()
+    f.close()
 
     cpp = ""
 
@@ -150,12 +143,47 @@ def cci2ccx():
     cpp = cpp.replace("#import", "#include")
     cpp = add_macro_guard(cpp, filename)
 
-    print cpp
+    return cpp
 
-    return 0
+
+def translate_source(filename):
+    cpp = ""
+
+    # TODO
+
+    return cpp
+
+
+def cci2ccx():
+    if len(sys.argv) != 2:
+        print "Syntax: " + sys.argv[0] + " <header_file>"
+        return 1
+
+    filename = sys.argv[1]
+
+    if filename.endswith(".h"):
+        cpp = translate_header(filename)
+        print cpp
+        return 0
+    elif filename.endswith(".m"):
+        #cpp = translate_source(filename)
+        print "Error: Only header files are currently supported."
+        return 1
+    else:
+        print "Error: Unknown file extension."
+        return 1
 
 
 #########################
-cci2ccx()
-#########################
+# Python entry point?
 
+
+def main():
+    cci2ccx()
+
+
+if __name__ == '__main__':
+    main()
+
+
+#########################
