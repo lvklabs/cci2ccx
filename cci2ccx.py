@@ -4,6 +4,16 @@ import re
 import sys
 
 
+"""
+Adds C-style macro guard:
+
+#ifndef MACRO
+#define MACRO
+...
+#endif
+"""
+
+
 def add_macro_guard(s, filename):
 
     macro_guard = "_" + re.sub('[^a-zA-Z]', '_', filename).upper() + "_"
@@ -14,6 +24,11 @@ def add_macro_guard(s, filename):
     cpp += "\n#endif //" + macro_guard + "\n"
 
     return cpp
+
+
+"""
+Parses Objective-C method parameters
+"""
 
 
 def parse_method_params_decl(s, a):
@@ -35,6 +50,11 @@ def parse_method_params_decl(s, a):
         parse_method_params_decl(tail, a)
 
 
+"""
+Constructs a string with C++ methods paramenters from dictionary d
+"""
+
+
 def to_cpp_method_params_decl(d):
     s = d["params"]
     pdecls = []
@@ -47,6 +67,11 @@ def to_cpp_method_params_decl(d):
         cpp += "{param_type} {param_name}".format(**pdecl)
 
     d["params"] = cpp
+
+
+"""
+Parses Objective-C class methods
+"""
 
 
 def parse_class_methods_decl(s, a):
@@ -76,6 +101,11 @@ def parse_class_methods_decl(s, a):
         parse_class_methods_decl(tail, a)
 
 
+"""
+Constructs a string with C++ method declarations from dictionary d
+"""
+
+
 def to_cpp_class_methods_decl(d):
     s = d["class_methods"]
     mdecls = []
@@ -86,6 +116,11 @@ def to_cpp_class_methods_decl(d):
         cpp += "    {type}{return_type} {name}({params});\n".format(**mdecl)
 
     d["class_methods"] = cpp
+
+
+"""
+Parses Objective-C class declaration
+"""
 
 
 def parse_class_decl(s):
@@ -100,6 +135,11 @@ def parse_class_decl(s):
     m = re.search(class_decl_regex, s, re.DOTALL)
 
     return m
+
+
+"""
+Constructs a string with C++ class declaration from dictionary d
+"""
 
 
 def to_cpp_class_decl(d):
@@ -120,6 +160,11 @@ public:
 """.format(**d)
 
     return cpp
+
+
+"""
+Translates objective-C header to C++ header
+"""
 
 
 def translate_header(filename):
@@ -144,6 +189,11 @@ def translate_header(filename):
     cpp = add_macro_guard(cpp, filename)
 
     return cpp
+
+
+"""
+Translates objective-C source code to C++ source code
+"""
 
 
 def translate_source(filename):
