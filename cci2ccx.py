@@ -130,7 +130,7 @@ class {class_name} : public {super_class}
 {class_attrs}
 public:
     bool virtual init();
-    static class_name* create();
+    static {class_name}* create();
 
 {class_methods}
 }};
