@@ -5,28 +5,6 @@ import sys
 
 
 """
-Adds C-style macro guard:
-
-#ifndef MACRO
-#define MACRO
-...
-#endif
-"""
-
-
-def add_macro_guard(s, filename):
-
-    macro_guard = "_" + re.sub('[^a-zA-Z]', '_', filename).upper() + "_"
-
-    cpp = "#ifndef " + macro_guard + "\n"
-    cpp += "#define " + macro_guard + "\n"
-    cpp += s
-    cpp += "\n#endif //" + macro_guard + "\n"
-
-    return cpp
-
-
-"""
 Parses Objective-C method parameters
 """
 
@@ -51,7 +29,7 @@ def parse_method_params_decl(s, a):
 
 
 """
-Constructs a string with C++ methods paramenters from dictionary d
+Returns a string with C++ methods parameters constructed from dictionary d
 """
 
 
@@ -76,7 +54,7 @@ Parses Objective-C class methods
 
 def parse_class_methods_decl(s, a):
     methods_decl_regex = r"\s*"
-    methods_decl_regex += r"(?P<type>[+-])\s*"                # method type i.e. class or instance
+    methods_decl_regex += r"(?P<method_type>[+-])\s*"         # method type i.e. class or instance
     methods_decl_regex += r"\((?P<return_type>\w+)\)\s*"      # method return type
     methods_decl_regex += r"(?P<name>\w+)\s*"                 # method name
     methods_decl_regex += r"(?P<params>.*?);\s*"              # method parameters
@@ -89,10 +67,10 @@ def parse_class_methods_decl(s, a):
 
         tail = d.pop("tail")
 
-        if d["type"] == "+":
-            d["type"] = "static "
+        if d["method_type"] == "+":
+            d["method_type"] = "static "
         else:
-            d["type"] = ""
+            d["method_type"] = ""
 
         to_cpp_method_params_decl(d)
 
@@ -102,7 +80,7 @@ def parse_class_methods_decl(s, a):
 
 
 """
-Constructs a string with C++ method declarations from dictionary d
+Returns a string with C++ method declarations constructed from dictionary d
 """
 
 
@@ -113,7 +91,7 @@ def to_cpp_class_methods_decl(d):
 
     cpp = ""
     for mdecl in mdecls:
-        cpp += "    {type}{return_type} {name}({params});\n".format(**mdecl)
+        cpp += "    {method_type}{return_type} {name}({params});\n".format(**mdecl)
 
     d["class_methods"] = cpp
 
@@ -138,15 +116,14 @@ def parse_class_decl(s):
 
 
 """
-Constructs a string with C++ class declaration from dictionary d
+Returns a string with C++ class declaration constructed from dictionary d
 """
 
 
 def to_cpp_class_decl(d):
     to_cpp_class_methods_decl(d)
 
-    cpp = """
-using namespace cocos2d;
+    cpp = """using namespace cocos2d;
 
 class {class_name} : public {super_class}
 {{
@@ -158,6 +135,25 @@ public:
 {class_methods}
 }};
 """.format(**d)
+
+    return cpp
+
+
+"""
+Adds C-style macro guard:
+
+"""
+
+
+def add_macro_guard(s, filename):
+
+    macro_guard = "_" + re.sub('[^a-zA-Z]', '_', filename).upper() + "_"
+
+    cpp = """#ifndef {macro}
+#define {macro}
+{source}
+#endif //{macro}
+""".format(macro=macro_guard, source=s)
 
     return cpp
 
