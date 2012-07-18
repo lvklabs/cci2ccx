@@ -15,6 +15,9 @@
 }
 
 - (void) tick:(ccTime) dt;
++ (void) example1;
+- (int)  example2;
+- (int)  exampleWithInt:(int)i andInt:(int)j;
 
 @end
 

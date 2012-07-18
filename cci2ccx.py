@@ -18,13 +18,11 @@ def add_macro_guard(s, filename):
 
 def parse_class_decl(s):
     class_decl_regex = r"(?P<head>.*?)"
-
-    class_decl_regex += r"@interface\s+(?P<class_name>\w+)"
-    class_decl_regex += r"\s*:\s*(?P<super_class>\w+)\s*"
-    class_decl_regex += r"({(?P<class_attrs>[^}]*)})?"
-    class_decl_regex += r"(?P<class_methods>.*?)"
-    class_decl_regex += r"@end"
-
+    class_decl_regex += r"@interface\s+(?P<class_name>\w+)"    # class name
+    class_decl_regex += r"\s*:\s*(?P<super_class>\w+)\s*"      # super class
+    class_decl_regex += r"({(?P<class_attrs>[^}]*)})?"         # class attributes
+    class_decl_regex += r"(?P<class_methods>.*?)"              # class methods
+    class_decl_regex += r"@end"                                # class end
     class_decl_regex += r"(?P<tail>.*)"
 
     m = re.search(class_decl_regex, s, re.DOTALL)
@@ -32,13 +30,44 @@ def parse_class_decl(s):
     return m
 
 
-def expand_cpp_class_methods_decl(m):
-    # TODO
-    return m
+def parse_class_methods_decl(s, a):
+    methods_decl_regex = r"\s*"
+    methods_decl_regex += r"(?P<type>[+-])\s*"                # method type i.e. class or instance
+    methods_decl_regex += r"\((?P<return_type>\w+)\)\s*"      # method return type
+    methods_decl_regex += r"(?P<name>\w+)\s*"                 # method name
+    methods_decl_regex += r"(?P<params>.*?);\s*"              # method parameters
+    methods_decl_regex += r"(?P<tail>.*)"
+
+    m = re.search(methods_decl_regex, s, re.DOTALL)
+
+    if m:
+        d = m.groupdict()
+
+        if d["type"] == "-":
+            d["type"] = "static "
+        else:
+            d["type"] = ""
+
+        tail = d.pop("tail")
+        a.append(d)
+
+        parse_class_methods_decl(tail, a)
 
 
-def expand_cpp_class_decl(m):
-    expand_cpp_class_methods_decl(m)
+def expand_cpp_class_methods_decl(d):
+    s = d["class_methods"]
+    a = []
+    parse_class_methods_decl(s, a)
+
+    cpp = ""
+    for mdecl in a:
+        cpp += "    {type}{return_type} {name}(/* FIXME {params} */);\n".format(**mdecl)
+
+    d["class_methods"] = cpp
+
+
+def expand_cpp_class_decl(d):
+    expand_cpp_class_methods_decl(d)
 
     cpp = """
 using namespace cocos2d;
@@ -50,10 +79,10 @@ public:
    bool virtual init();
    static class_name* create();
 
-/* FIXME ObjC Methods: {class_methods} */
+    {class_methods}
 
 }};
-""".format(**m.groupdict())
+""".format(**d)
 
     return cpp
 
@@ -75,7 +104,7 @@ def cci2ccx():
         m = parse_class_decl(objc)
         if m:
             cpp += m.group("head")
-            cpp += expand_cpp_class_decl(m)
+            cpp += expand_cpp_class_decl(m.groupdict())
             objc = m.group("tail")
         else:
             cpp += objc
