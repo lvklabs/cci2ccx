@@ -4,12 +4,9 @@ import re
 import sys
 
 
-"""
-Parses Objective-C method parameters
-"""
-
-
 def parse_method_params_decl(s, a):
+    """Parses Objective-C method parameters"""
+
     method_params_regex = r"\s*"
     method_params_regex += r"(?P<method_name_cont>\w*)\s*:\s*"        # method name continuation
     method_params_regex += r"\((?P<param_type>\w+)\)\s*"              # parameter type
@@ -28,12 +25,9 @@ def parse_method_params_decl(s, a):
         parse_method_params_decl(tail, a)
 
 
-"""
-Returns a string with C++ methods parameters constructed from dictionary d
-"""
-
-
 def to_cpp_method_params_decl(d):
+    """Returns a string with C++ methods parameters constructed from dictionary d"""
+
     s = d["params"]
     pdecls = []
     parse_method_params_decl(s, pdecls)
@@ -47,12 +41,9 @@ def to_cpp_method_params_decl(d):
     d["params"] = cpp
 
 
-"""
-Parses Objective-C class methods
-"""
-
-
 def parse_class_methods_decl(s, a):
+    """Parses Objective-C class method"""
+
     methods_decl_regex = r"\s*"
     methods_decl_regex += r"(?P<method_type>[+-])\s*"         # method type i.e. class or instance
     methods_decl_regex += r"\((?P<return_type>\w+)\)\s*"      # method return type
@@ -79,12 +70,8 @@ def parse_class_methods_decl(s, a):
         parse_class_methods_decl(tail, a)
 
 
-"""
-Returns a string with C++ method declarations constructed from dictionary d
-"""
-
-
 def to_cpp_class_methods_decl(d):
+    """Returns a string with C++ method declarations constructed from dictionary d"""
     s = d["class_methods"]
     mdecls = []
     parse_class_methods_decl(s, mdecls)
@@ -96,12 +83,8 @@ def to_cpp_class_methods_decl(d):
     d["class_methods"] = cpp
 
 
-"""
-Parses Objective-C class declaration
-"""
-
-
 def parse_class_decl(s):
+    """Parses Objective-C class declaration"""
     class_decl_regex = r"(?P<head>.*?)"
     class_decl_regex += r"@interface\s+(?P<class_name>\w+)"    # class name
     class_decl_regex += r"\s*:\s*(?P<super_class>\w+)\s*"      # super class
@@ -115,12 +98,8 @@ def parse_class_decl(s):
     return m
 
 
-"""
-Returns a string with C++ class declaration constructed from dictionary d
-"""
-
-
 def to_cpp_class_decl(d):
+    """Returns a string with C++ class declaration constructed from dictionary d"""
     to_cpp_class_methods_decl(d)
 
     cpp = """using namespace cocos2d;
@@ -139,13 +118,8 @@ public:
     return cpp
 
 
-"""
-Adds C-style macro guard:
-
-"""
-
-
 def add_macro_guard(s, filename):
+    """Adds C-style macro guard:"""
 
     macro_guard = "_" + re.sub('[^a-zA-Z]', '_', filename).upper() + "_"
 
@@ -158,12 +132,9 @@ def add_macro_guard(s, filename):
     return cpp
 
 
-"""
-Translates objective-C header to C++ header
-"""
-
-
 def translate_header(filename):
+    """Translates objective-C header to C++ header"""
+
     f = open(filename, 'r')
     objc = f.read()
     f.close()
@@ -187,12 +158,8 @@ def translate_header(filename):
     return cpp
 
 
-"""
-Translates objective-C source code to C++ source code
-"""
-
-
 def translate_source(filename):
+    """Translates objective-C source code to C++ source code"""
     cpp = ""
 
     # TODO
@@ -220,16 +187,9 @@ def cci2ccx():
         return 1
 
 
-#########################
-# Python entry point?
-
-
 def main():
     cci2ccx()
 
 
 if __name__ == '__main__':
     main()
-
-
-#########################
