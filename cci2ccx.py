@@ -3,6 +3,7 @@
 import re
 import sys
 
+
 CPP_MACRO_GUARD_TEMPLATE = \
 """#ifndef {macro}
 #define {macro}
@@ -13,7 +14,7 @@ CPP_MACRO_GUARD_TEMPLATE = \
 CPP_CLASS_DECL_TEMPLATE = \
 """using namespace cocos2d;
 
-class {class_name} : public {super_class}
+class {name} : public {super_class}
 {{
 {class_attrs}
 public:
@@ -24,12 +25,13 @@ public:
 }};
 """
 
-CPP_CLASS_DEF_TEMPLATE = \
-"""
-/*********** FIXME class {class_name} ***********/
-{class_methods}
-/*********** FIXME class {class_name} ***********/
-
+CPP_METHOD_DEF_TEMPLATE = \
+"""{return_type} {class_name}::{method_name}(/* FIXME {params} */)
+{{
+/* FIXME:
+{body}
+*/
+}}
 """
 
 
@@ -84,8 +86,14 @@ class cci2ccx:
 
         return cpp
 
+    ###############################################################################################
+
     def parse_class_decl(self, s):
-        """Parses Objective-C class declaration"""
+        """Parses a Objective-C class declaration:
+        @interface class_name : super_class
+        ...
+        @end
+        """
 
         class_decl_regex = r"(?P<head>.*?)"
         class_decl_regex += r"@interface\s+(?P<class_name>\w+)"    # class name
@@ -102,36 +110,17 @@ class cci2ccx:
     def to_cpp_class_decl(self, d):
         """Returns a string with C++ class declaration constructed from dictionary d"""
 
-        self.to_cpp_class_methods_decl(d)
+        self.to_cpp_methods_decl(d)
 
         cpp = CPP_CLASS_DECL_TEMPLATE.format(**d)
 
         return cpp
 
-    def parse_class_def(self, s):
-        """Parses Objective-C class definition"""
-
-        class_decl_regex = r"(?P<head>.*?)"
-        class_decl_regex += r"@implementation\s+(?P<class_name>\w+)"   # class definition start
-        class_decl_regex += r"(?P<class_methods>.*?)"                  # class methods
-        class_decl_regex += r"@end"                                    # class definition end
-        class_decl_regex += r"(?P<tail>.*)"
-
-        m = re.search(class_decl_regex, s, re.DOTALL)
-
-        return m
-
-    def to_cpp_class_def(self, d):
-        """Returns a string with C++ class definition constructed from dictionary d"""
-
-        #TODO self.to_cpp_class_methods_def(d)
-
-        cpp = CPP_CLASS_DEF_TEMPLATE.format(**d)
-
-        return cpp
-
-    def parse_class_methods_decl(self, s, a):
-        """Parses Objective-C class method declaration"""
+    def parse_methods_decl(self, s, a):
+        """Parses a Objective-C method declaration
+        - (return_type) instance_method:(type)param ...
+        + (return_type) class_method:(type)param ...
+        """
 
         methods_decl_regex = r"\s*"
         methods_decl_regex += r"(?P<method_type>[+-])\s*"         # m. type i.e. class or instance
@@ -158,7 +147,7 @@ class cci2ccx:
 
             self.parse_class_methods_decl(tail, a)
 
-    def to_cpp_class_methods_decl(self, d):
+    def to_cpp_methods_decl(self, d):
         """Returns a string with C++ method declarations constructed from dictionary d"""
 
         s = d["class_methods"]
@@ -172,7 +161,9 @@ class cci2ccx:
         d["class_methods"] = cpp
 
     def parse_method_params_decl(self, s, a):
-        """Parses Objective-C method parameters"""
+        """Parses Objective-C method parameters:
+        class_name_cont:(param_type)param_name
+        """
 
         method_params_regex = r"\s*"
         method_params_regex += r"(?P<method_name_cont>\w*)\s*:\s*"      # method name continuation
@@ -219,6 +210,104 @@ class cci2ccx:
 
         return cpp
 
+    ###############################################################################################
+
+    def parse_class_def(self, s):
+        """Parses a Objective-C class definition:
+        @implementation class_name
+        ...
+        @end
+        """
+
+        class_def_regex = r"(?P<head>.*?)"
+        class_def_regex += r"@implementation\s+(?P<class_name>\w+)"   # class definition start
+        class_def_regex += r"(?P<methods>.*?)"                        # class methods
+        class_def_regex += r"@end"                                    # class definition end
+        class_def_regex += r"(?P<tail>.*)"
+
+        m = re.search(class_def_regex, s, re.DOTALL)
+
+        if m:
+            print m.group("head")    # FIXME remove print
+
+            methods = []
+            self.parse_method_def(m.group("methods"), methods)
+
+            for method in methods:
+                method["class_name"] = m.group("class_name")
+                print CPP_METHOD_DEF_TEMPLATE.format(**method)     # FIXME remove print
+
+        return m
+
+    def to_cpp_class_def(self, d):
+        """Returns a string with C++ class definition constructed from dictionary d"""
+
+        # TODO
+
+        return ""
+
+    def parse_method_def(self, s, a):
+        """Parses Objective-C method definitions
+        - (return_type) instance_method:(type)param { ... }
+        + (return_type) class_method:(type)param { ... }
+        """
+
+        methods_def_regex = r"\s*"
+        methods_def_regex += r"(?P<method_type>[+-])\s*"         # m. type i.e. class or instance
+        methods_def_regex += r"\((?P<return_type>\w+)\)\s*"      # method return type
+        methods_def_regex += r"(?P<method_name>\w+)\s*"          # method name
+        methods_def_regex += r"(?P<params>.*?)\s*"               # method parameters
+        methods_def_regex += r"(?P<body_unbound>{.*)"            # method body + tail
+
+        m = re.search(methods_def_regex, s, re.DOTALL)
+
+        if m:
+            d = m.groupdict()
+
+            # TODO parse parameters
+
+            body_unbound = d.pop("body_unbound")
+
+            l = self.parse_method_body(body_unbound)
+
+            body = l[0]
+            tail = l[1]
+
+            d["body"] = body
+            a.append(d)
+
+            self.parse_method_def(tail, a)
+
+    def parse_method_body(self, s):
+        """Parses a method body:
+        {
+        ... body ...
+        }
+        ... tail ...
+        Returns [body, tail]
+        """
+
+        brace_count = 0
+        body_started = 0
+        i = 0
+
+        for i, c in enumerate(s):
+            if brace_count == 0 and body_started == 1:
+                break
+            if c == '{':
+                brace_count += 1
+                body_started = 1
+            elif c == '}':
+                brace_count -= 1
+
+        body = s[1:(i - 1)]
+        tail = s[(i + 1):len(s)]
+
+        return [body, tail]
+
+
+###################################################################################################
+
 
 def main():
     if len(sys.argv) != 2:
@@ -233,7 +322,7 @@ def main():
         return 0
     elif filename.endswith(".m"):
         cpp_source = cci2ccx().translate_source(filename)
-        print cpp_source
+        #print cpp_source
         return 0
     else:
         print "Error: Unknown file extension."
