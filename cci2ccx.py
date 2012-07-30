@@ -3,6 +3,13 @@
 import re
 import sys
 
+CPP_MACRO_GUARD_TEMPLATE = \
+"""#ifndef {macro}
+#define {macro}
+{source}
+#endif //{macro}
+"""
+
 CPP_CLASS_DECL_TEMPLATE = \
 """using namespace cocos2d;
 
@@ -17,11 +24,12 @@ public:
 }};
 """
 
-CPP_MACRO_GUARD_TEMPLATE = \
-"""#ifndef {macro}
-#define {macro}
-{source}
-#endif //{macro}
+CPP_CLASS_DEF_TEMPLATE = \
+"""
+/*********** FIXME class {class_name} ***********/
+{class_methods}
+/*********** FIXME class {class_name} ***********/
+
 """
 
 
@@ -54,9 +62,25 @@ class cci2ccx:
 
     def translate_source(self, filename):
         """Translates objective-C source code to C++ source code"""
+
+        f = open(filename, 'r')
+        objc = f.read()
+        f.close()
+
         cpp = ""
 
-        # TODO
+        while objc != "":
+            m = self.parse_class_def(objc)
+            if m:
+                d = m.groupdict()
+                cpp += d.pop("head")
+                cpp += self.to_cpp_class_def(d)
+                objc = d.pop("tail")
+            else:
+                cpp += objc
+                objc = ""
+
+        cpp = cpp.replace("#import", "#include")
 
         return cpp
 
@@ -81,6 +105,28 @@ class cci2ccx:
         self.to_cpp_class_methods_decl(d)
 
         cpp = CPP_CLASS_DECL_TEMPLATE.format(**d)
+
+        return cpp
+
+    def parse_class_def(self, s):
+        """Parses Objective-C class definition"""
+
+        class_decl_regex = r"(?P<head>.*?)"
+        class_decl_regex += r"@implementation\s+(?P<class_name>\w+)"   # class definition start
+        class_decl_regex += r"(?P<class_methods>.*?)"                  # class methods
+        class_decl_regex += r"@end"                                    # class definition end
+        class_decl_regex += r"(?P<tail>.*)"
+
+        m = re.search(class_decl_regex, s, re.DOTALL)
+
+        return m
+
+    def to_cpp_class_def(self, d):
+        """Returns a string with C++ class definition constructed from dictionary d"""
+
+        #TODO self.to_cpp_class_methods_def(d)
+
+        cpp = CPP_CLASS_DEF_TEMPLATE.format(**d)
 
         return cpp
 
@@ -186,9 +232,9 @@ def main():
         print cpp_header
         return 0
     elif filename.endswith(".m"):
-        #cpp_source = cci2ccx().translate_source(filename)
-        print "Error: Only header files are currently supported."
-        return 1
+        cpp_source = cci2ccx().translate_source(filename)
+        print cpp_source
+        return 0
     else:
         print "Error: Unknown file extension."
         return 1
