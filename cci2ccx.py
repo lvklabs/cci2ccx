@@ -14,7 +14,7 @@ CPP_MACRO_GUARD_TEMPLATE = \
 CPP_CLASS_DECL_TEMPLATE = \
 """using namespace cocos2d;
 
-class {name} : public {super_class}
+class {class_name} : public {super_class}
 {{
 {class_attrs}
 public:
@@ -145,14 +145,14 @@ class cci2ccx:
 
             a.append(d)
 
-            self.parse_class_methods_decl(tail, a)
+            self.parse_methods_decl(tail, a)
 
     def to_cpp_methods_decl(self, d):
         """Returns a string with C++ method declarations constructed from dictionary d"""
 
         s = d["class_methods"]
         mdecls = []
-        self.parse_class_methods_decl(s, mdecls)
+        self.parse_methods_decl(s, mdecls)
 
         cpp = ""
         for mdecl in mdecls:
