@@ -1,0 +1,4 @@
+#ifndef $macro
+#define $macro
+$source
+#endif //$macro$

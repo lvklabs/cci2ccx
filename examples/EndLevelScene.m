@@ -213,7 +213,7 @@
     [[CCDirector sharedDirector] replaceScene: [CCTransitionFade transitionWithDuration:SCENE_TRANSITION_FADE_DUR scene:ms]];
 }
 
--(void) nextLevel:(id)sender
+- (void) nextLevel:(id)sender
 {
     GameScene * gs = [GameScene node];
     [[CCDirector sharedDirector] replaceScene: [CCTransitionFade transitionWithDuration:SCENE_TRANSITION_FADE_DUR scene:gs]];
