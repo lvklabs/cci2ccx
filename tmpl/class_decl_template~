@@ -2,13 +2,14 @@ using namespace cocos2d;
 
 class $class_name : public $super_class
 {
-$class_attrs
 public:
     bool virtual init();
     static $class_name create();
 
 $class_methods_public
 
-pivate:
+private:
+$class_attrs
 $class_methods_private
+
 };
