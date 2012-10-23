@@ -37,7 +37,7 @@ class CppTranslate(object):
         source += self.data.source_defines + '\n' * 2
         source += '/* not parsed \n -->'
         source += self.data.source.strip('\n') + '\n'
-        source += '<-- not parsed /*' + '\n' * 2
+        source += '<-- not parsed */' + '\n' * 2
         source += self.construct_clases_source()
 
         #source = self.add_macro_guard(header, filename)
@@ -175,8 +175,8 @@ class CppTranslate(object):
         equivalent_dict = ({'YES': 'true', 'NO': 'false', 'BOOL': 'bool',
             'CGSize': 'CCSize', 'CGRect': 'CCRect', 'CGPoint': 'CCPoint',
             'CGFloat': 'CCFloat', 'NSString': 'CCString',
-            'NSMutableDictionary': 'CCDictionary',
-            'NSDictionary': 'CCDictionary'})
+            'NSMutableDictionary': 'CCDictionary', 'NSDictionary': 'CCDictionary',
+            'NSObject' : 'CCObject', 'NSInteger' : 'CCInteger', 'NSUInteger' : 'CCInteger'})
 
         if objc_type in equivalent_dict.keys():
             return equivalent_dict[objc_type]
