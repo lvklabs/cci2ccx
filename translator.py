@@ -21,9 +21,7 @@ class CppTranslate(object):
         header += self.data.header_include_block.replace(
                         "#import", "#include") + '\n'
         header += self.data.header_defines + '\n'
-        header += '/* not parsed \n -->'
-        header += self.data.header.strip('\n') + '\n'
-        header += '<-- not parsed */ \n'
+        header += self.not_parsed(self.data.header)
         header += self.construct_clases_header()
 
         #header = self.add_macro_guard(header, filename)
@@ -35,9 +33,7 @@ class CppTranslate(object):
         source += self.data.source_include_block.replace(
                         "#import", "#include") + '\n' * 2
         source += self.data.source_defines + '\n' * 2
-        source += '/* not parsed \n -->'
-        source += self.data.source.strip('\n') + '\n'
-        source += '<-- not parsed */' + '\n' * 2
+        source += self.not_parsed(self.data.source)
         source += self.construct_clases_source()
 
         #source = self.add_macro_guard(header, filename)
@@ -63,6 +59,12 @@ class CppTranslate(object):
             else:
                 v['class_attrs'] = ''
 
+            np = v['not_parsed'].strip('\n')
+
+            if np:
+                v['not_parsed'] = "/* \n not parsed ---------->\n" + np +\
+                                 "\n<------------ not parsed \n*/ "
+
             classes += self.fill_template('class_decl_template', dict(v))
 
         return classes
@@ -75,6 +77,7 @@ class CppTranslate(object):
         for k, v in self.data.get_classes():
 
             class_methods_dict = dict(v['class_methods'])
+
             for method, data in class_methods_dict.iteritems():
                 data['class_name'] = k
                 if data.get('params'):
@@ -169,6 +172,18 @@ class CppTranslate(object):
                                 if not v.get('interface')}
 
             return self.construct_declaration(public_methods)
+
+    def not_parsed(self, not_parsed_source):
+        code = ''
+        not_parsed = not_parsed_source.strip('\n')
+
+        if not_parsed:
+            code += '/* not parsed \n -->'
+            code += not_parsed + '\n'
+            code += '<-- not parsed */' + '\n' * 2
+        else:
+            print not_parsed
+        return code
 
     def translate_type(self, objc_type):
         '''takes an objective-c type and translate it to cpp equivalent'''

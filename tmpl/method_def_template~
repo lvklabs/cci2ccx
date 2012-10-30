@@ -1,7 +1,0 @@
-$return_type $class_name::$method_name($params)
-{{
-/* FIXME:
-$body
-*/
-}}
-
