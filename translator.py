@@ -104,6 +104,8 @@ class CppTranslate(object):
                 method_decl += '(' +\
                                 self.construct_method_params(
                                     v.get('params')) + ')'
+            else:
+                method_decl += '()'
 
             method_decl += ';\n'
 
@@ -176,7 +178,7 @@ class CppTranslate(object):
             'CGSize': 'CCSize', 'CGRect': 'CCRect', 'CGPoint': 'CCPoint',
             'CGFloat': 'CCFloat', 'NSString': 'CCString',
             'NSMutableDictionary': 'CCDictionary',
-            'NSDictionary': 'CCDictionary'})
+            'NSDictionary': 'CCDictionary', 'NSInteger': 'CCInteger'})
 
         if objc_type in equivalent_dict.keys():
             return equivalent_dict[objc_type]

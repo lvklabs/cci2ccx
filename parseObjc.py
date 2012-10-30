@@ -7,16 +7,16 @@ class ParseObjc(object):
 
     __cls_name = r'\s+(?P<class_name>\w+)'
     __cls_methods = r'(?P<class_methods>.*?)'
-    __cls_end = '(?:@end))'
+    __cls_end = '(?:^@end))'
     __cls_super_class = '(?P<super_class>\w+)'
     __cls_attr = '({(?P<class_attrs>[^}]*)})'
-    __class_impl_regex = r'(?P<class>(?:@implementation)' + __cls_name +\
+    __class_impl_regex = r'(?P<class>(?:^@implementation)' + __cls_name +\
                          __cls_methods + __cls_end
 
-    __class_interface_regex = r'(?P<class>(?:@interface)' + __cls_name\
+    __class_interface_regex = r'(?P<class>(?:^@interface)' + __cls_name\
                         + '\(\)' + __cls_methods + __cls_end
 
-    __class_decl_regex = '(?P<class>@interface' + __cls_name + '\s*:\s*' +\
+    __class_decl_regex = '(?P<class>^@interface' + __cls_name + '\s*:\s*' +\
                      __cls_super_class + '\s*' + __cls_attr + '?' + \
                       __cls_methods + __cls_end
 
@@ -25,7 +25,7 @@ class ParseObjc(object):
     __name = '(?P<method_name>\w*?)'
     __params = '(?P<params>:.*?)?'
     __method_decl_regex_wo_dots = r'(?:' + __type + '\s*\(' + __return_type +\
-                                 '\))\s*' + __name + __params
+                                 '\))\s*' + __name + '\s*' + __params
     __method_decl_regex = __method_decl_regex_wo_dots + r';'
     __method_impl_regex = __method_decl_regex_wo_dots +\
                                 r'(?:^{(?P<body>.*?)^}$)'
