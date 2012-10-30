@@ -98,7 +98,7 @@ class CppTranslate(object):
 
             if v['type'] == '+':
                 method_decl += 'static '
-            method_decl += v['return_type'] + ' '
+            method_decl += self.translate_type(v['return_type']) + ' '
             method_decl += v['method_name']
             if v.get('params'):
                 method_decl += '(' +\
