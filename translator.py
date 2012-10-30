@@ -21,9 +21,9 @@ class CppTranslate(object):
         header += self.data.header_include_block.replace(
                         "#import", "#include") + '\n'
         header += self.data.header_defines + '\n'
-        header += 'not parsed \n -->'
+        header += '/* not parsed \n -->'
         header += self.data.header.strip('\n') + '\n'
-        header += '<-- not parsed \n'
+        header += '<-- not parsed */ \n'
         header += self.construct_clases_header()
 
         #header = self.add_macro_guard(header, filename)
@@ -35,9 +35,9 @@ class CppTranslate(object):
         source += self.data.source_include_block.replace(
                         "#import", "#include") + '\n' * 2
         source += self.data.source_defines + '\n' * 2
-        source += 'not parsed \n -->'
+        source += '/* not parsed \n -->'
         source += self.data.source.strip('\n') + '\n'
-        source += '<-- not parsed' + '\n' * 2
+        source += '<-- not parsed */' + '\n' * 2
         source += self.construct_clases_source()
 
         #source = self.add_macro_guard(header, filename)
@@ -177,8 +177,8 @@ class CppTranslate(object):
         equivalent_dict = ({'YES': 'true', 'NO': 'false', 'BOOL': 'bool',
             'CGSize': 'CCSize', 'CGRect': 'CCRect', 'CGPoint': 'CCPoint',
             'CGFloat': 'CCFloat', 'NSString': 'CCString',
-            'NSMutableDictionary': 'CCDictionary',
-            'NSDictionary': 'CCDictionary', 'NSInteger': 'CCInteger'})
+            'NSMutableDictionary': 'CCDictionary', 'NSDictionary': 'CCDictionary',
+            'NSObject' : 'CCObject', 'NSInteger' : 'CCInteger', 'NSUInteger' : 'CCInteger'})
 
         if objc_type in equivalent_dict.keys():
             return equivalent_dict[objc_type]
