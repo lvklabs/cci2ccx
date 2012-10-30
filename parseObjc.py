@@ -14,7 +14,7 @@ class ParseObjc(object):
                          __cls_methods + __cls_end
 
     __class_interface_regex = r'(?P<class>(?:^@interface)' + __cls_name\
-                        + '\(\)' + __cls_methods + __cls_end
+                        + '\s?\(\)' + __cls_methods + __cls_end
 
     __class_decl_regex = '(?P<class>^@interface' + __cls_name + '\s*:\s*' +\
                      __cls_super_class + '\s*' + __cls_attr + '?' + \
