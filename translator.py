@@ -194,8 +194,10 @@ class CppTranslate(object):
         equivalent_dict = ({'YES': 'true', 'NO': 'false', 'BOOL': 'bool',
             'CGSize': 'CCSize', 'CGRect': 'CCRect', 'CGPoint': 'CCPoint',
             'CGFloat': 'CCFloat', 'NSString': 'CCString',
-            'NSMutableDictionary': 'CCDictionary', 'NSDictionary': 'CCDictionary',
-            'NSObject' : 'CCObject', 'NSInteger' : 'CCInteger', 'NSUInteger' : 'CCInteger'})
+            'NSMutableDictionary': 'CCDictionary',
+            'NSDictionary': 'CCDictionary',
+            'NSObject': 'CCObject', 'NSInteger': 'CCInteger',
+            'NSUInteger': 'CCInteger'})
 
         if objc_type in equivalent_dict.keys():
             return equivalent_dict[objc_type]
