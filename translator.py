@@ -8,6 +8,7 @@ class CppTranslate(object):
 
     def __init__(self, parseObjc):
         self.data = parseObjc
+        self.header_file_name = None
 
     def fill_template(self, template_name, data):
         f = open('./tmpl/' + template_name, 'r')
@@ -17,26 +18,30 @@ class CppTranslate(object):
 
     def construct_header(self):
 
-        header = self.data.header_init_comment + '\n'
-        header += self.data.header_include_block.replace(
+        header = self.data.header_include_block.replace(
                         "#import", "#include") + '\n'
         header += self.data.header_defines + '\n'
         header += self.not_parsed(self.data.header)
         header += self.construct_clases_header()
 
-        #header = self.add_macro_guard(header, filename)
+        header = self.add_macro_guard(header, self.header_file_name)
+
+        header = ''.join([self.data.header_init_comment, '\n', header, '\n'])
+
         return header
 
     def construct_source(self):
 
-        source = self.data.source_init_comment + '\n'
-        source += self.data.source_include_block.replace(
+        source = self.data.source_include_block.replace(
                         "#import", "#include") + '\n' * 2
         source += self.data.source_defines + '\n' * 2
         source += self.not_parsed(self.data.source)
         source += self.construct_clases_source()
 
-        #source = self.add_macro_guard(header, filename)
+        source = self.add_macro_guard(source, self.header_file_name)
+
+        source = ''.join([self.data.source_init_comment, '\n', source, '\n'])
+
         return source
 
     def construct_clases_header(self):
@@ -186,6 +191,11 @@ class CppTranslate(object):
         else:
             print not_parsed
         return code
+
+    def set_header_name(self, header_file_name):
+        self.header_file_name = header_file_name
+        #setattr(self, header_file_name, header_file_name)
+        pass
 
     def translate_type(self, objc_type):
         '''takes an objective-c type and translate it to cpp equivalent'''
