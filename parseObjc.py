@@ -36,7 +36,7 @@ class ParseObjc(object):
 
     __define_block = r'(?P<define_block>#define(?:\ .*?){2}$)'
 
-    __param_regex = r'\((?P<param_type>\w+)\)\s*(?P<param_name>\w+)'
+    __param_regex = r'\((?P<param_type>\w+\s*\*?)\)\s*(?P<param_name>\w+)'
 
     __attr_regex = r'(?P<attr_type>\w+)\ \s*(?P<attr_name>\*?\w+);'
 
@@ -263,3 +263,42 @@ class ParseObjc(object):
     def list_methods_of_class(self, class_name):
         for k, v in self._classes[class_name].iteritems():
                 print "has method:", k, "\n"
+
+
+#TODO : parse methods code
+# ([A-Z]\w+)\s+(\*\w+)\s*=\s*\[([A-Z]\w*)\s(\w*):(\w*)\]
+# CCMenuItemImage *backArrow =
+# [CCMenuItemImage itemFromNormalImage:GAME_BACK_ARROW_FILE]
+
+
+"""
+TODO: Transform this:
+
+    CGSize dimensions = CGSizeMake(SCR_W*0.9, SCR_H);
+
+    LvkLabelWithShadow *titleLabel = [LvkLabelWithShadow labelWithString:STR_LEVEL_SEL_TITLE dimensions:dimensions alignment:UITextAlignmentCenter
+                                                           lineBreakMode:UILineBreakModeWordWrap fontName:LEVEL_SEL_TITLE_FONT_NAME
+                                                                fontSize:LEVEL_SEL_TITLE_FONT_SIZE];
+
+    titleLabel.anchorPoint = CGPointMake(0.5, 1);
+    titleLabel.position = LEVEL_SEL_TITLE_POS;
+    titleLabel.color = LEVEL_SEL_TITLE_COLOR;
+
+    [self addChild:titleLabel];
+
+Into
+
+
+    CCSize dimensions = CCSizeMake(SCR_W*0.9, SCR_H);
+
+    LvkLabelWithShadow *titleLabel = LvkLabelWithShadow::create(STR_LEVEL_SEL_TITLE, dimensions, kCCTextAlignmentCenter,
+                                                                 kCCVerticalTextAlignmentCenterfontName, LEVEL_SEL_TITLE_FONT_NAME,
+                                                                LEVEL_SEL_TITLE_FONT_SIZE);
+
+    titleLabel->setAnchorPoint(CCPointMake(0.5, 1));
+    titleLabel->setPosition(LEVEL_SEL_TITLE_POS);
+    titleLabel->setColor(LEVEL_SEL_TITLE_COLOR);
+
+    this->addChild(titleLabel)
+
+"""

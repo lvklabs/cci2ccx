@@ -59,11 +59,11 @@ class CppTranslate(object):
             else:
                 v['class_attrs'] = ''
 
-            np = v['not_parsed'].strip('\n')
+            v['not_parsed'] = v['not_parsed'].strip('\n')
 
-            if np:
-                v['not_parsed'] = "/* \n not parsed ---------->\n" + np +\
-                                 "\n<------------ not parsed \n*/ "
+            if v['not_parsed']:
+                v['not_parsed'] = "/* \n not parsed ---------->\n" +\
+                         v['not_parsed'] + "\n<------------ not parsed \n*/ "
 
             classes += self.fill_template('class_decl_template', dict(v))
 
@@ -81,6 +81,7 @@ class CppTranslate(object):
             for method, data in class_methods_dict.iteritems():
                 data['class_name'] = k
                 if data.get('params'):
+
                     data['params'] = self.construct_method_params(
                                         data.get('params'))
                 else:
@@ -121,6 +122,7 @@ class CppTranslate(object):
         and return correct cpp formated params
         '''
         params_string = ''
+
         for p in param_list:
             params_string += self.translate_type(p['param_type']) + ' ' +\
                              p['param_name'] + ', '

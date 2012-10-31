@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import optparse
+#import optparse
+import argparse
 from parseObjc import ParseObjc
 from translator import CppTranslate
 
@@ -18,21 +19,26 @@ def read_file(filepath):
     return content
 
 if __name__ == '__main__':
-    opt_parser = optparse.OptionParser()
-    opt_parser.add_option("--header", dest="header",
+    #opt_parser = optparse.OptionParser()
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("-hh", "--header", dest="header",
         help="header file")
-    opt_parser.add_option("--source", dest="source",
+    arg_parser.add_argument("-src", "--source", dest="source",
         help="source file, must provide one")
-    (options, args) = opt_parser.parse_args()
-    if not options.source:
-        exit("not source indicated, \n please use -h to more help")
+    arg_parser.add_argument("-o", "--path", dest="opath",
+        help="TODO: Path to output files")
 
-    options = vars(options)
+    args = arg_parser.parse_args()
 
-    source_file = options['source']
+    #if not args.source:
+        #exit("not source indicated, \n please use -h to more help")
+
+    #options = vars(options)
+
+    source_file = args.source
     source = read_file(source_file)
 
-    header_file = options['header']
+    header_file = args.header
     header = read_file(header_file)
 
     parserObjc = ParseObjc()
