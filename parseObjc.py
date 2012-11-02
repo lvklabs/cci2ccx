@@ -1,3 +1,29 @@
+#
+# Copyright (C) 2012 LVK labs
+#
+# This file is part of LVK cci2ccx tool.
+#
+# LVK cci2ccx is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# LVK cci2ccx is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LVK cci2ccx. If not, see <http://www.gnu.org/licenses/>.
+
+"""
+A module wich parse an iphone objective-c source(.m) and header(.h) and save
+the estructure inside
+
+Primary thinked for code using cocos2d library for game develop, but it should
+word for any objective-c code
+"""
+
 import re
 from pprint import pprint
 from collections import defaultdict

@@ -1,4 +1,22 @@
 #!/usr/bin/env python
+#
+# Copyright (C) 2012 LVK labs
+#
+# This file is part of LVK cci2ccx tool.
+#
+# LVK cci2ccx is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# LVK cci2ccx is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LVK cci2ccx. If not, see <http://www.gnu.org/licenses/>.
+
 
 import argparse
 from os.path import basename
@@ -50,8 +68,8 @@ if __name__ == '__main__':
     source = ptc.construct_source()
 
 #Just for testing right now
-    write_file(args.source + 'translated.cpp', source)
-    write_file(args.header + 'translated.h', header)
+    write_file(args.source + '.translated.cpp', source)
+    write_file(args.header + '.translated.h', header)
 
 '''
 To test try to run this code :

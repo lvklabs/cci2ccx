@@ -1,3 +1,28 @@
+#
+# Copyright (C) 2012 LVK labs
+#
+# This file is part of LVK cci2ccx tool.
+#
+# LVK cci2ccx is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# LVK cci2ccx is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LVK cci2ccx. If not, see <http://www.gnu.org/licenses/>.
+
+"""
+A module to translate a ParseObjc object to c++ using cocos2d-x as primary
+library
+
+
+"""
+
 import re
 from pprint import pprint
 from collections import defaultdict
@@ -45,9 +70,9 @@ class CppTranslate(object):
         return source
 
     def construct_clases_header(self):
-        '''useing the data from data.get_classes() create the string
+        """useing the data from data.get_classes() create the string
         representing the parsed class in cpp
-        '''
+        """
         classes = ''
         for k, v in self.data.get_classes():
 
@@ -75,9 +100,10 @@ class CppTranslate(object):
         return classes
 
     def construct_clases_source(self):
-        '''using the data from data.get_classes() create the string
+        """
+        using the data from data.get_classes() create the string
         representing the parsed class in cpp
-        '''
+        """
         classes = ''
         for k, v in self.data.get_classes():
 
@@ -96,7 +122,9 @@ class CppTranslate(object):
         return classes
 
     def construct_declaration(self, methods):
-        '''construct and translate methods from parsed method data'''
+        """
+        construct and translate methods from parsed method data
+        """
         #TODO: translate types
         #TODO: maybe order methods by name or other criteria
 
@@ -121,11 +149,12 @@ class CppTranslate(object):
         return method_decl
 
     def construct_method_params(self, param_list):
-        '''take a list of dicts {'param_name': 'someName',
+        """
+        take a list of dicts {'param_name': 'someName',
                                 'param_type': 'someType'}
 
         and return correct cpp formated params
-        '''
+        """
         params_string = ''
 
         for p in param_list:
@@ -135,11 +164,12 @@ class CppTranslate(object):
         return params_string.rstrip(', ')
 
     def construct_attr(self, attr_list):
-        '''take a list of dicts {'attr_name': '_layerTime',
+        """
+        take a list of dicts {'attr_name': '_layerTime',
                                 'attr_type': 'ccTime'}
 
         @returns a string with attributes of the class translated to cpp
-        '''
+        """
         attr_string = ''
         for a in attr_list:
             attr_string += '    '
@@ -149,7 +179,8 @@ class CppTranslate(object):
         return attr_string
 
     def add_macro_guard(self, source, filename):
-        """Adds C-style macro guard:
+        """
+        Adds C-style macro guard:
         #ifndef XXX
         #define XXX
         ...
@@ -198,8 +229,9 @@ class CppTranslate(object):
         pass
 
     def translate_type(self, objc_type):
-        '''takes an objective-c type and translate it to cpp equivalent'''
-        #TODO:
+        """
+        takes an objective-c type and translate it to cpp equivalent
+        """
 
         equivalent_dict = ({'YES': 'true', 'NO': 'false', 'BOOL': 'bool',
             'CGSize': 'CCSize', 'CGRect': 'CCRect', 'CGPoint': 'CCPoint',
