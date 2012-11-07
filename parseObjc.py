@@ -53,8 +53,9 @@ class ParseObjc(object):
     __method_decl_regex_wo_dots = r'(?:' + __type + '\s*\(' + __return_type +\
                                  '\))\s*' + __name + '\s*' + __params
     __method_decl_regex = __method_decl_regex_wo_dots + r';'
-    __method_impl_regex = __method_decl_regex_wo_dots +\
-                                r'(?:^{(?P<body>.*?)^}$)'
+    __method_impl_regex = '(?P<original_method>' +\
+                            __method_decl_regex_wo_dots +\
+                            r'(?:^{(?P<body>.*?)^}\ *$)' + ')'
 
     __initial_comment_regex = r'(?P<initial_comment>^//.*//\n)'
 
@@ -90,7 +91,12 @@ class ParseObjc(object):
     def __repr__(self):
         return "%s(%r)" % (self.__class__, self.__dict__)
 
-    def print_regex(self, regex_name_list):
+    def print_regex(self):
+        regex_name_list = ['classes_impl', 'interface_impl',
+                              'classes_decl']
+        self.print_regex_list(regex_name_list)
+
+    def print_regex_list(self, regex_name_list):
 
         for name in regex_name_list:
             v = ParseObjc.__regex_dict[name]
@@ -98,6 +104,7 @@ class ParseObjc(object):
                 print name, '\t', key, '\t', value
                 print name, '\t', key, 'without names\t ',\
                              re.sub('P<\w*>', ':', value)
+            print '\n'
 
     def parse_source(self, objc):
         self.parse(objc, 'source', ['classes_impl', 'interface_impl'])
@@ -115,7 +122,8 @@ class ParseObjc(object):
         source = self.parse_initial_comment(source, filetype)
         source = self.parse_include(source, filetype)
         source = self.parse_define(source, filetype)
-        source = self.parse_classes(source, regex_name_list)
+        source = self.parse_classes(source, regex_name_list, filetype)
+
         self.save_not_parsed(filetype, source)
 
     def parse_initial_comment(self, source, filetype):
@@ -140,7 +148,7 @@ class ParseObjc(object):
 
         return source_text
 
-    def parse_classes(self, source, type_list):
+    def parse_classes(self, source, type_list, filetype):
         '''process classes or interfaces
         blocks of code as
         "@implementation class_name  -- OR -- @interface class_name()
@@ -172,14 +180,17 @@ class ParseObjc(object):
                     self.add_class(class_name, class_attrs, super_class)
 
                 body = rgx.sub(self.process_class(class_name,
-                                            class_body, method_regex, t), body)
+                                            class_body, method_regex, t,
+                                            filetype), body)
         return body
 
-    def process_class(self, class_name, class_body, method_regex, cls_type):
+    def process_class(self, class_name, class_body, method_regex, cls_type,
+                     filetype):
 
         not_parsed = self.parse_methods(class_name, class_body, method_regex,
                                         cls_type)
-        self._classes[class_name]['not_parsed'] = not_parsed
+
+        self._classes[class_name][filetype]['not_parsed'] = not_parsed
         return ''
 
     def parse_methods(self, class_name, class_body, method_regex, cls_type):

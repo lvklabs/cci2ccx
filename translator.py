@@ -61,6 +61,7 @@ class CppTranslate(object):
                         "#import", "#include") + '\n' * 2
         source += self.data.source_defines + '\n' * 2
         source += self.not_parsed(self.data.source)
+
         source += self.construct_clases_source()
 
         source = self.add_macro_guard(source, self.header_file_name)
@@ -74,26 +75,27 @@ class CppTranslate(object):
         representing the parsed class in cpp
         """
         classes = ''
-        for k, v in self.data.get_classes():
+        for class_name, v in self.data.get_classes():
 
             v = dict(v)
-            v['class_name'] = k
+            v['class_name'] = class_name
             class_methods_dict = dict(v['class_methods'])
 
-            v['class_methods_private'] = self.get_methods(class_methods_dict,
+            v['class_methods_private'] = self.get_methods(class_name,
+                                                            class_methods_dict,
                                                             True)
-            v['class_methods_public'] = self.get_methods(class_methods_dict,
+            v['class_methods_public'] = self.get_methods(class_name,
+                                                         class_methods_dict,
                                                             False)
             if v.get('class_attrs'):
                 v['class_attrs'] = self.construct_attr(v['class_attrs'])
             else:
                 v['class_attrs'] = ''
 
-            v['not_parsed'] = v['not_parsed'].strip('\n')
+            not_parsed = v['header']['not_parsed'].strip('\n')
 
-            if v['not_parsed']:
-                v['not_parsed'] = "/* \n not parsed ---------->\n" +\
-                         v['not_parsed'] + "\n<------------ not parsed \n*/ "
+            if not_parsed:
+                v['not_parsed'] = not_parsed
 
             classes += self.fill_template('class_decl_template', dict(v))
 
@@ -105,23 +107,36 @@ class CppTranslate(object):
         representing the parsed class in cpp
         """
         classes = ''
-        for k, v in self.data.get_classes():
+        for class_name, v in self.data.get_classes():
+
+            not_parsed = v['source']['not_parsed'].strip('\n')
+
+            classes += self.fill_template('class_impl_start_template',
+                                        {'class_name': class_name,
+                                        'not_parsed': not_parsed})
 
             class_methods_dict = dict(v['class_methods'])
 
             for method, data in class_methods_dict.iteritems():
-                data['class_name'] = k
+                data['class_name'] = class_name
                 if data.get('params'):
 
                     data['params'] = self.construct_method_params(
                                         data.get('params'))
                 else:
                     data['params'] = ''
+
+                if data.get('body'):
+                    data['body_translated'] = self.translate_method_code(
+                                                            class_name,
+                                                            data['body'])
+                data['return_type'] = self.translate_type(data['return_type'])
+
                 classes += self.fill_template('method_def_template', data)
 
         return classes
 
-    def construct_declaration(self, methods):
+    def construct_declaration(self, class_name, methods):
         """
         construct and translate methods from parsed method data
         """
@@ -136,7 +151,8 @@ class CppTranslate(object):
             if v['type'] == '+':
                 method_decl += 'static '
             method_decl += self.translate_type(v['return_type']) + ' '
-            method_decl += v['method_name']
+            method_decl += self.translate_method_name(class_name,
+                                                         v['method_name'])
             if v.get('params'):
                 method_decl += '(' +\
                                 self.construct_method_params(
@@ -192,7 +208,7 @@ class CppTranslate(object):
         return self.fill_template(template_name='macro_guard_template',
                                   data=data)
 
-    def get_methods(self, class_methods_dict, from_interface):
+    def get_methods(self, class_name, class_methods_dict, from_interface):
         #TODO: DRY it
         if from_interface:
             #Recover methods parsed form interface ie private methods
@@ -200,7 +216,7 @@ class CppTranslate(object):
                                 class_methods_dict.iteritems()
                                 if v.get('interface')}
             if private_methods:
-                return self.construct_declaration(private_methods)
+                return self.construct_declaration(class_name, private_methods)
             else:
                 return ''
         else:
@@ -209,16 +225,16 @@ class CppTranslate(object):
                                 class_methods_dict.iteritems()
                                 if not v.get('interface')}
 
-            return self.construct_declaration(public_methods)
+            return self.construct_declaration(class_name, public_methods)
 
     def not_parsed(self, not_parsed_source):
         code = ''
         not_parsed = not_parsed_source.strip('\n')
 
         if not_parsed:
-            code += '/* not parsed \n -->'
-            code += not_parsed + '\n'
-            code += '<-- not parsed */' + '\n' * 2
+            code += '/*START not parsed (outside any class):\n \n'
+            code += not_parsed + '\n' * 2
+            code += 'END not parsed (outside any class)\n*/' + '\n' * 2
         else:
             print not_parsed
         return code
@@ -239,9 +255,33 @@ class CppTranslate(object):
             'NSMutableDictionary': 'CCDictionary',
             'NSDictionary': 'CCDictionary',
             'NSObject': 'CCObject', 'NSInteger': 'CCInteger',
-            'NSUInteger': 'CCInteger'})
+            'NSUInteger': 'CCInteger', 'NSSet': 'CCSet', 'UIEvent': 'CCEvent',
+            'NSMutableArray': 'CCMutableArray', 'NSArray': 'CCArray'})
 
         if objc_type in equivalent_dict.keys():
             return equivalent_dict[objc_type]
         else:
             return objc_type
+
+    def translate_method_name(self, class_name, method_name):
+
+        #not using 'scene': 'create' because template alreade include that name
+        translate_method_dict = ({'dealloc': '~' + class_name})
+
+        if method_name in translate_method_dict.keys():
+            return translate_method_dict[method_name]
+        else:
+            return method_name
+
+    def translate_method_code(self, class_name, body):
+        #\[([_\w]+)\ [_\w]+(:([_\w]+))?\];
+        message = '\[(?P<obj>[_\w]+)\ (?P<method_name>[_\w]+):(?P<argument>[_\w]+)\];'
+        rgx = re.compile(message)
+        body = re.sub(message, self.translate_message, body)
+
+        return body
+
+    def translate_message(self, matchObj):
+        m = matchObj
+        return m.group('obj') + '->' + m.group('method_name') +\
+                     '(' + m.group('argument') + ')'
