@@ -1,7 +1,15 @@
+/* original method code:
+
+$original_method
+
+*/
 $return_type $class_name::$method_name($params)
 {
-/* FIXME:
-$body
-*/
+
+// FIXME: best try to translated body of method:
+
+
+$body_translated
+
 }
 

@@ -2,7 +2,11 @@ using namespace cocos2d;
 
 class $class_name : public $super_class
 {
+// Not parsed in $class_name
+/*
 $not_parsed
+*/
+
 public:
     bool virtual init();
     static $class_name create();
