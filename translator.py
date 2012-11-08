@@ -34,6 +34,17 @@ class CppTranslate(object):
     def __init__(self, parseObjc):
         self.data = parseObjc
         self.header_file_name = None
+        self.equivalent_dict = ({'YES': 'true', 'NO': 'false', 'BOOL': 'bool',
+            'CGSize': 'CCSize', 'CGRect': 'CCRect', 'CGPoint': 'CCPoint',
+            'CGFloat': 'CCFloat', 'NSString': 'CCString',
+            'NSMutableDictionary': 'CCDictionary',
+            'NSDictionary': 'CCDictionary',
+            'NSObject': 'CCObject', 'NSInteger': 'CCInteger',
+            'NSUInteger': 'CCInteger', 'NSSet': 'CCSet', 'UIEvent': 'CCEvent',
+            'NSMutableArray': 'CCMutableArray', 'NSArray': 'CCArray',
+            'nil': 'NULL', 'ccp': 'CCPoint', 'CGPointMake':'CCPoint',
+            'self': 'this'})
+
 
     def fill_template(self, template_name, data):
         f = open('./tmpl/' + template_name, 'r')
@@ -249,17 +260,8 @@ class CppTranslate(object):
         takes an objective-c type and translate it to cpp equivalent
         """
 
-        equivalent_dict = ({'YES': 'true', 'NO': 'false', 'BOOL': 'bool',
-            'CGSize': 'CCSize', 'CGRect': 'CCRect', 'CGPoint': 'CCPoint',
-            'CGFloat': 'CCFloat', 'NSString': 'CCString',
-            'NSMutableDictionary': 'CCDictionary',
-            'NSDictionary': 'CCDictionary',
-            'NSObject': 'CCObject', 'NSInteger': 'CCInteger',
-            'NSUInteger': 'CCInteger', 'NSSet': 'CCSet', 'UIEvent': 'CCEvent',
-            'NSMutableArray': 'CCMutableArray', 'NSArray': 'CCArray'})
-
-        if objc_type in equivalent_dict.keys():
-            return equivalent_dict[objc_type]
+        if objc_type in self.equivalent_dict.keys():
+            return self.equivalent_dict[objc_type]
         else:
             return objc_type
 
@@ -274,14 +276,104 @@ class CppTranslate(object):
             return method_name
 
     def translate_method_code(self, class_name, body):
-        #\[([_\w]+)\ [_\w]+(:([_\w]+))?\];
-        message = '\[(?P<obj>[_\w]+)\ (?P<method_name>[_\w]+):(?P<argument>[_\w]+)\];'
-        rgx = re.compile(message)
-        body = re.sub(message, self.translate_message, body)
+        arg = '[_\w\d]*'
+        first_parameter = '(?P<first_argument>:[_\w]+)?'
+        args_group = '(?P<arguments>\ [\w_]+:[_\w\d+]*)*'
+        method_name = '(?P<method_name>[_\w]+)'
+        obj = '(?P<obj>[_\w]+)'
+        object_ = '\[' + obj
+        spaces = '(?P<space>\ *)'
+        spaces2 = '(?P<space2>\ *)'
+        message = object_ + '\ ' + method_name + first_parameter +\
+                 args_group + '\];'
+
+        eq = '\ *=\ *'
+        set_arguments = '(?P<set_arguments>position|color|anchorPoint)'
+        sett = '^' + spaces + obj + '.' + set_arguments + eq +\
+                 '(?P<rvalue>.*?);$'
+
+        assign = '^' + spaces + '(?:(?P<lval>' + arg + ')' + eq + ')' + message
+
+        alloc_init = '^' + spaces + '(?:(?P<lval>' + arg + ')' + eq + ')' +\
+                    '\[\[' + obj + '\ alloc\]\ init\];'
+
+        rgx = re.compile(assign, re.MULTILINE)
+        body = rgx.sub(self.translate_message, body)
+
+        message = '^' + spaces2 + message
+
+        rgx = re.compile(message, re.MULTILINE)
+        body = rgx.sub(self.translate_message, body)
+
+        rgx = re.compile(sett, re.MULTILINE | re.DOTALL)
+        body = rgx.sub(self.translate_set, body)
+
+        #FIXME: only reemplace in not commented lines
+        for t in self.equivalent_dict.keys():
+            body = re.sub(t, self.equivalent_dict[t], body)
+
+        print alloc_init
+        rgx = re.compile(alloc_init, re.MULTILINE)
+        body = rgx.sub(self.translate_alloc_init, body)
+
+        #TODO:
+        #[_gameMenu runAction: [CCFadeOut actionWithDuration:CONTROLS_FADE_DURATION]]
+        #_itemsLayer = [[LvkItemsLayer alloc] initWithLvkItems:items];
+        #[_gameMenu runAction: [CCFadeOut actionWithDuration:CONTROLS_FADE_DURATION]];
 
         return body
 
     def translate_message(self, matchObj):
         m = matchObj
-        return m.group('obj') + '->' + m.group('method_name') +\
-                     '(' + m.group('argument') + ')'
+        arguments = m.group('arguments')
+
+        space = m.groupdict().get('space')
+        spaces = m.groupdict().get('space2')
+        first_argument = m.groupdict().get('first_argument')
+        larg = m.groupdict().get('lval')
+
+        if not spaces:
+            spaces = ''
+
+        if not space:
+            space = ''
+
+        to_return = spaces + '// ' + m.group(0).strip(' ') + '\n' + spaces
+
+        if larg:
+            to_return += space + larg + ' = '
+
+        if arguments:
+
+            arguments = re.sub(r'\ *\w*\:([_\w\d+]*)',
+                         lambda mm: mm.group(1) + ', ',
+                         arguments).rstrip(', ')
+
+            to_return += m.group('obj') + '->' + m.group('method_name') +\
+              '(' + first_argument.lstrip(':') + ', ' +\
+              arguments + ');'
+
+        elif first_argument:
+            to_return += m.group('obj') + '->' + m.group('method_name') +\
+                     '(' + first_argument.lstrip(':') + ');'
+        else:
+            to_return += m.group('obj') + '->' + m.group('method_name') +\
+                     '(' + ');'
+
+        return to_return
+
+    def translate_set(self, matchObj):
+        method = 'set' + matchObj.group('set_arguments').title()
+        rslt = '//' + matchObj.group(0) + '\n' + matchObj.group('space') +\
+             matchObj.group('obj') + '->' +\
+             method + '(' + matchObj.group('rvalue') + ');'
+
+        return rslt
+
+    def translate_alloc_init(self, matchObj):
+        space = matchObj.groupdict().get('space')
+        lval = matchObj.group('lval')
+        obj = matchObj.group('obj')
+        rslt = space + lval + ' = new ' + obj + '();\n' + space + lval +\
+                 '->init();'
+        return rslt
