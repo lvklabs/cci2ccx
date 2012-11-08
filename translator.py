@@ -43,7 +43,7 @@ class CppTranslate(object):
             'NSUInteger': 'CCInteger', 'NSSet': 'CCSet', 'UIEvent': 'CCEvent',
             'NSMutableArray': 'CCMutableArray', 'NSArray': 'CCArray',
             'nil': 'NULL', 'ccp': 'CCPoint', 'CGPointMake': 'CCPoint',
-            'self': 'this', 'NSSet': 'CCSet'})
+            'self': 'this', 'NSSet': 'CCSet', 'SEL': 'SEL_MenuHandler'})
 
     def fill_template(self, template_name, data):
         f = open('./tmpl/' + template_name, 'r')
@@ -295,7 +295,7 @@ class CppTranslate(object):
                  args_group + '\];'
 
         eq = '\ *=\ *'
-        set_arguments = '(?P<set_arguments>position|color|anchorPoint)'
+        set_arguments = '(?P<set_arguments>position|color|anchorPoint|visible)'
         sett = '^' + spaces + obj + '.' + set_arguments + eq +\
                  '(?P<rvalue>.*?);$'
 
@@ -370,7 +370,7 @@ class CppTranslate(object):
 
     def translate_set(self, matchObj):
         method = 'set' + matchObj.group('set_arguments').title()
-        rslt = '//' + matchObj.group(0) + '\n' + matchObj.group('space') +\
+        rslt = matchObj.group('space') + '//' + matchObj.group(0) + '\n' +\
              matchObj.group('obj') + '->' +\
              method + '(' + matchObj.group('rvalue') + ');'
 
@@ -380,6 +380,7 @@ class CppTranslate(object):
         space = matchObj.groupdict().get('space')
         lval = matchObj.group('lval')
         obj = matchObj.group('obj')
-        rslt = space + lval + ' = new ' + obj + '();\n' + space + lval +\
+        rslt = space + '//' + matchObj.group(0) + '\n'
+        rslt += space + lval + ' = new ' + obj + '();\n' + space + lval +\
                  '->init();'
         return rslt
