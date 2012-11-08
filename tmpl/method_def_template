@@ -6,7 +6,7 @@ $original_method
 $return_type $class_name::$method_name($params)
 {
 
-// FIXME: best try to translated body of method:
+// FIXME: best attempt to translate the code:
 
 
 $body_translated
