@@ -312,7 +312,6 @@ class CppTranslate(object):
         for t in self.equivalent_dict.keys():
             body = re.sub(t, self.equivalent_dict[t], body)
 
-        print alloc_init
         rgx = re.compile(alloc_init, re.MULTILINE)
         body = rgx.sub(self.translate_alloc_init, body)
 
