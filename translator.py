@@ -42,9 +42,8 @@ class CppTranslate(object):
             'NSObject': 'CCObject', 'NSInteger': 'CCInteger',
             'NSUInteger': 'CCInteger', 'NSSet': 'CCSet', 'UIEvent': 'CCEvent',
             'NSMutableArray': 'CCMutableArray', 'NSArray': 'CCArray',
-            'nil': 'NULL', 'ccp': 'CCPoint', 'CGPointMake':'CCPoint',
-            'self': 'this'})
-
+            'nil': 'NULL', 'ccp': 'CCPoint', 'CGPointMake': 'CCPoint',
+            'self': 'this', 'NSSet': 'CCSet'})
 
     def fill_template(self, template_name, data):
         f = open('./tmpl/' + template_name, 'r')
@@ -57,6 +56,7 @@ class CppTranslate(object):
         header = self.data.header_include_block.replace(
                         "#import", "#include") + '\n'
         header += self.data.header_defines + '\n'
+
         header += self.not_parsed(self.data.header)
         header += self.construct_clases_header()
 
@@ -171,6 +171,7 @@ class CppTranslate(object):
             else:
                 method_decl += '()'
 
+
             method_decl += ';\n'
 
         return method_decl
@@ -259,11 +260,17 @@ class CppTranslate(object):
         """
         takes an objective-c type and translate it to cpp equivalent
         """
+        pointer = ''
+        or_objc_type = objc_type
+
+        if '*' in objc_type:
+            objc_type = re.sub(r'\*', '', objc_type).strip(' ')
+            pointer = '*'
 
         if objc_type in self.equivalent_dict.keys():
-            return self.equivalent_dict[objc_type]
+            return self.equivalent_dict[objc_type] + pointer
         else:
-            return objc_type
+            return or_objc_type
 
     def translate_method_name(self, class_name, method_name):
 
