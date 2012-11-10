@@ -75,8 +75,6 @@ class CppTranslate(object):
 
         source += self.construct_clases_source()
 
-        source = self.add_macro_guard(source, self.header_file_name)
-
         source = ''.join([self.data.source_init_comment, '\n', source, '\n'])
 
         return source
