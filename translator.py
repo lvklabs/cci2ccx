@@ -54,6 +54,7 @@ class CppTranslate(object):
 
     def construct_header(self):
 
+        #pprint(self.data.get_methods("GameView"))
         header = self.data.header_include_block.replace(
                         "#import", "#include") + '\n'
         header += self.data.header_defines + '\n'
@@ -126,8 +127,10 @@ class CppTranslate(object):
                                         'not_parsed': not_parsed})
 
             class_methods_dict = dict(v['class_methods'])
+            class_methods_dict = sorted(class_methods_dict.iteritems(),
+                     key=lambda (k,v): v['order'])
 
-            for method, data in class_methods_dict.iteritems():
+            for method, data in class_methods_dict:
                 data['class_name'] = class_name
                 if data.get('params'):
 
@@ -225,6 +228,7 @@ class CppTranslate(object):
             private_methods = {k: v for (k, v) in
                                 class_methods_dict.iteritems()
                                 if v.get('interface')}
+
             if private_methods:
                 return self.construct_declaration(class_name, private_methods)
             else:

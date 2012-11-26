@@ -215,6 +215,8 @@ class ParseObjc(object):
 
         if cls_type == 'interface_impl':
             method_data['interface'] = True
+        #else:
+            #method_data['interface'] = False
 
         self.add_method_to_class(class_name, method_data)
 
@@ -254,8 +256,23 @@ class ParseObjc(object):
         assert method_data
         prev_dict = self._classes[class_name]['class_methods'][method_name]
 
+        #keep order of methods
+        methods_count = self._classes[class_name].get('methods_count')
+
+        if not methods_count:
+            self._classes[class_name]['methods_count'] = 0
+
         if prev_dict:
             self.assert_dicts_new_data_equal(prev_dict, method_data)
+            method_data['order'] = prev_dict['order']
+            #print "same", method_data.get('order')
+        else:
+            #print prev_dict, '\n\n'
+            self._classes[class_name]['methods_count'] += 1
+            method_data['order'] =\
+                self._classes[class_name]['methods_count']
+
+        #print class_name, method_name, method_data['order']
 
         self._classes[class_name]['class_methods'][method_name]\
                             .update(method_data)
@@ -294,9 +311,16 @@ class ParseObjc(object):
             yield k, v
 
     def get_methods(self, class_name):
-        for k, v in self._classes[class_name].iteritems():
+        #for k, v in self._classes[class_name].iteritems():
+            #yield k, v
+
+        for k, v in sorted(self._classes[class_name].iteritems(),
+                     key=lambda (k,v): v['order']):
             yield k, v
 
     def list_methods_of_class(self, class_name):
         for k, v in self._classes[class_name].iteritems():
                 print "has method:", k, "\n"
+
+    #def order(self, v):
+        #return v['order']
