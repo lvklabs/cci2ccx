@@ -166,6 +166,7 @@ class ParseObjc(object):
             rgx = re.compile(regex, re.DOTALL | re.MULTILINE)
 
             for m in rgx.finditer(body):
+
                 class_name = m.groupdict()['class_name']
                 class_body = m.groupdict()['class_methods']
                 class_attrs = m.groupdict().get('class_attrs')
@@ -218,12 +219,18 @@ class ParseObjc(object):
         #else:
             #method_data['interface'] = False
 
+
+        method_data['method_name_key'] = self.contruct_method_name_key(method_data['method_name'],
+                                     method_params)
+
+        #print method_data['method_name_key']
         self.add_method_to_class(class_name, method_data)
 
         return ''
 
     #TODO: merge this next two methods into uno with regex as parameter
     def parse_method_params(self, params_string):
+        #print params_string
 
         rgx = re.compile(self.__param_regex, re.DOTALL | re.MULTILINE)
         param_list = []
@@ -251,7 +258,7 @@ class ParseObjc(object):
         self._classes[class_name]['super_class'] = super_class
 
     def add_method_to_class(self, class_name, method_data):
-        method_name = method_data['method_name']
+        method_name = method_data['method_name_key']
 
         assert method_data
         prev_dict = self._classes[class_name]['class_methods'][method_name]
@@ -299,6 +306,15 @@ class ParseObjc(object):
                         #print k, "has'", prev_dict.get(k), "\'new value \'", v
                     assert p_value == n_value
 
+    def contruct_method_name_key(self, name, params_string):
+        if not params_string:
+            return name
+        rgx = re.compile('(?P<partname>\w+):', re.DOTALL | re.MULTILINE)
+
+        for m in rgx.finditer(params_string):
+            name += m.groupdict()['partname']
+        return name
+
     def list_clases_names(self):
         print "classes list:\n"
         for cls, data in self._classes.iteritems():
@@ -324,3 +340,7 @@ class ParseObjc(object):
 
     #def order(self, v):
         #return v['order']
+
+if __name__ == '__main__':
+    parserObjc = ParseObjc()
+    parserObjc.print_regex()
