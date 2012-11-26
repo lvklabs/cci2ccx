@@ -38,12 +38,13 @@ class CppTranslate(object):
             'CGSize': 'CCSize', 'CGRect': 'CCRect', 'CGPoint': 'CCPoint',
             'CGFloat': 'CCFloat', 'NSString': 'CCString',
             'NSMutableDictionary': 'CCDictionary',
-            'NSDictionary': 'CCDictionary',
+            'NSDictionary': 'CCDictionary', 'NSNumber': 'CCNumber',
             'NSObject': 'CCObject', 'NSInteger': 'CCInteger',
             'NSUInteger': 'CCInteger', 'NSSet': 'CCSet', 'UIEvent': 'CCEvent',
             'NSMutableArray': 'CCMutableArray', 'NSArray': 'CCArray',
-            'nil': 'NULL', 'ccp': 'CCPoint', 'CGPointMake': 'CCPoint',
-            'self': 'this', 'NSSet': 'CCSet', 'SEL': 'SEL_MenuHandler'})
+            ' nil': ' NULL', 'ccp': 'CCPoint', 'CGPointMake': 'CCPoint',
+            'self': 'this', 'NSSet': 'CCSet', 'SEL ': 'SEL_MenuHandler ',
+            'UITextAlignmentCenter': 'kCCTextAlignmentCenter'})
 
     def fill_template(self, template_name, data):
         f = open('./tmpl/' + template_name, 'r')
@@ -101,7 +102,7 @@ class CppTranslate(object):
             else:
                 v['class_attrs'] = ''
 
-            not_parsed = v['header']['not_parsed'].strip('\n')
+            not_parsed = v['header'].get('not_parsed').strip('\n')
 
             if not_parsed:
                 v['not_parsed'] = not_parsed
@@ -118,7 +119,7 @@ class CppTranslate(object):
         classes = ''
         for class_name, v in self.data.get_classes():
 
-            not_parsed = v['source']['not_parsed'].strip('\n')
+            not_parsed = v['header'].get('not_parsed').strip('\n')
 
             classes += self.fill_template('class_impl_start_template',
                                         {'class_name': class_name,
@@ -168,7 +169,6 @@ class CppTranslate(object):
                                     v.get('params')) + ')'
             else:
                 method_decl += '()'
-
 
             method_decl += ';\n'
 
@@ -230,7 +230,7 @@ class CppTranslate(object):
             else:
                 return ''
         else:
-            #Recover methods NOT parsed form interface ie private methods
+            #Recover methods NOT parsed form interface ie public methods
             public_methods = {k: v for (k, v) in
                                 class_methods_dict.iteritems()
                                 if not v.get('interface')}
@@ -293,7 +293,9 @@ class CppTranslate(object):
                  args_group + '\];'
 
         eq = '\ *=\ *'
-        set_arguments = '(?P<set_arguments>position|color|anchorPoint|visible)'
+        set_arguments = '(?P<set_arguments>position|color|anchorPoint|' +\
+                        'visible|sprite)'
+
         sett = '^' + spaces + obj + '.' + set_arguments + eq +\
                  '(?P<rvalue>.*?);$'
 
