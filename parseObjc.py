@@ -25,7 +25,7 @@ word for any objective-c code
 """
 
 import re
-from pprint import pprint
+from pprint import pprint, pformat
 from collections import defaultdict
 
 
@@ -95,12 +95,12 @@ class ParseObjc(object):
                      str(cdata['class_attrs']) + '\n'
 
             string += 'Methods: \n\n'
-            for mkey, mdata in cdata['class_methods'].iteritems():
+            methods = sorted(cdata['class_methods'].iteritems(),
+                             key=lambda (k, v): v['order'])
+            for mkey, mdata in methods:
                 string += '\t ' + mkey + '\n'
-                if mkey == 'getItemsOwnedAtLevel':
-                    string += str(mdata)
                 #+ '\n --SART-- \n \t\t' + '\n--END--\n'
-                         #str(cdata['class_methods']) +\
+                         #pformat(cdata['class_methods']) +\
             #string += 'Methods END \n\n'
 
             string += '\n -- Not parsed in header START --\n \t\t' +\
@@ -109,7 +109,7 @@ class ParseObjc(object):
             string += '\n-- Not parsed in source START --\n \t\t' +\
                  cdata['source']['not_parsed'].strip('\n') + '\n' +\
                   '--Not parsed in source END --\n\n'
-
+        string += 'defines : ' + pformat(self.source_defines)
         return string
 
     def __repr__(self):

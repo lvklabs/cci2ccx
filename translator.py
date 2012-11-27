@@ -130,7 +130,7 @@ class CppTranslate(object):
 
             class_methods_dict = dict(v['class_methods'])
             class_methods_dict = sorted(class_methods_dict.iteritems(),
-                     key=lambda (k,v): v['order'])
+                     key=lambda (k, v): v['order'])
 
             for method, data in class_methods_dict:
                 data['class_name'] = class_name
