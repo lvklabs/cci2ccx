@@ -144,6 +144,8 @@ class CppTranslate(object):
                                                             class_name,
                                                             data['body'])
                 data['return_type'] = self.translate_type(data['return_type'])
+                data['method_name'] = self.translate_method_name(class_name,
+                                                         data['method_name'])
 
                 classes += self.fill_template('method_def_template', data)
 
@@ -369,6 +371,9 @@ class CppTranslate(object):
         else:
             to_return += m.group('obj') + '->' + m.group('method_name') +\
                      '(' + ');'
+
+        #remove self-> (coding style desition)
+        to_return = to_return.replace('self->', '')
 
         return to_return
 
