@@ -62,6 +62,7 @@ class ParseObjc(object):
     __import_block = '(?P<import_block>(?:^#import\ "\S*"(.*#import\ "\S*")?))'
 
     __define_block = r'(?P<define_block>#define(?:\ .*?){2}$)'
+    #__define_block = r'(?P<define_block>^#define(?:\ .*?)$)*'
 
     __param_regex = r'\((?P<param_type>\w+\s*\*?)\)\s*(?P<param_name>\w+)'
 
@@ -158,16 +159,24 @@ class ParseObjc(object):
         return self.parse_regex(source, ParseObjc.__import_block,
                                 filetype + '_include_block')
 
-    def parse_define(self, source, filetype):
-        return self.parse_regex(source, ParseObjc.__define_block,
-                                filetype + '_defines')
-
     def parse_regex(self, source, regex, attrname):
         rgx = re.compile(regex, re.DOTALL | re.MULTILINE)
 
         source_text = source
         for m in rgx.finditer(source):
             setattr(self, attrname, m.group())
+            source_text = rgx.sub((lambda x: ''), source_text)
+
+        return source_text
+
+    def parse_define(self, source, filetype):
+
+        rgx = re.compile(ParseObjc.__define_block, re.DOTALL | re.MULTILINE)
+
+        source_text = source
+        for m in rgx.finditer(source):
+            data = getattr(self, filetype + '_defines')
+            setattr(self, filetype + '_defines', data + '\n' + m.group())
             source_text = rgx.sub((lambda x: ''), source_text)
 
         return source_text
