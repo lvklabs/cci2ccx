@@ -47,6 +47,8 @@ class CppTranslate(object):
             'UITextAlignmentCenter': 'kCCTextAlignmentCenter'})
 
     def fill_template(self, template_name, data):
+        #TODO: don't onpen the template for each call, make it once time only
+        #Implemente load template() int the initializaiton
         f = open('./tmpl/' + template_name, 'r')
         template = f.read()
         f.close()
@@ -120,7 +122,7 @@ class CppTranslate(object):
         classes = ''
         for class_name, v in self.data.get_classes():
 
-            not_parsed = v['header'].get('not_parsed').strip('\n')
+            not_parsed = v['source'].get('not_parsed').strip('\n')
 
             classes += self.fill_template('class_impl_start_template',
                                         {'class_name': class_name,

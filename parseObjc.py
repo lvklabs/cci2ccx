@@ -47,11 +47,11 @@ class ParseObjc(object):
                       __cls_methods + __cls_end
 
     __type = r'(?P<type>[+-])'
-    __return_type = '(?P<return_type>\w*?\*?)'
+    __return_type = '\((?P<return_type>\w*?\ ?\*?\ ?)\)'
     __name = '(?P<method_name>\w*?)'
     __params = '(?P<params>:.*?)?'
-    __method_decl_regex_wo_dots = r'(?:' + __type + '\s*\(' + __return_type +\
-                                 '\))\s*' + __name + '\s*' + __params
+    __method_decl_regex_wo_dots = r'(?:' + __type + '\s*' + __return_type +\
+                                 ')\s*' + __name + '\s*' + __params
     __method_decl_regex = __method_decl_regex_wo_dots + r';'
     __method_impl_regex = '(?P<original_method>' +\
                             __method_decl_regex_wo_dots +\
@@ -84,9 +84,33 @@ class ParseObjc(object):
         self.source_include_block = ''
         self.source_defines = ''
 
-    #def __str__(self):
-        #TODO:
-        #return ""
+    def __str__(self):
+        string = ''
+        for cls, cdata in self._classes.iteritems():
+            string += cls + '\n'
+            string += '\t BaseClassName \n \t\t' + cdata['super_class'] + '\n'
+            string += '\t methods_count \n \t\t' +\
+                     str(cdata['methods_count']) + '\n'
+            string += '\t class atributes \n \t\t' +\
+                     str(cdata['class_attrs']) + '\n'
+
+            string += 'Methods: \n\n'
+            for mkey, mdata in cdata['class_methods'].iteritems():
+                string += '\t ' + mkey + '\n'
+                if mkey == 'getItemsOwnedAtLevel':
+                    string += str(mdata)
+                #+ '\n --SART-- \n \t\t' + '\n--END--\n'
+                         #str(cdata['class_methods']) +\
+            #string += 'Methods END \n\n'
+
+            string += '\n -- Not parsed in header START --\n \t\t' +\
+                 cdata['header']['not_parsed'].strip('\n') + '\n' +\
+                  '--Not parsed in header END --\n\n'
+            string += '\n-- Not parsed in source START --\n \t\t' +\
+                 cdata['source']['not_parsed'].strip('\n') + '\n' +\
+                  '--Not parsed in source END --\n\n'
+
+        return string
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__, self.__dict__)
