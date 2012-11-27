@@ -380,9 +380,12 @@ class CppTranslate(object):
         return to_return
 
     def translate_set(self, matchObj):
-        method = 'set' + matchObj.group('set_arguments').title()
-        rslt = matchObj.group('space') + '//' + matchObj.group(0) + '\n' +\
-             matchObj.group('obj') + '->' +\
+        setmtd = matchObj.group('set_arguments')[0].upper() +\
+                 matchObj.group('set_arguments')[1:]
+        spaces = matchObj.group('space')
+        method = 'set' + setmtd
+        rslt = spaces + '//' + matchObj.group(0) + '\n' +\
+             spaces + matchObj.group('obj') + '->' +\
              method + '(' + matchObj.group('rvalue') + ');'
 
         return rslt
