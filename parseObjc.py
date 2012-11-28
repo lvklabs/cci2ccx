@@ -34,7 +34,7 @@ class ParseObjc(object):
     __cls_name = r'\s+(?P<class_name>\w+)'
     __cls_methods = r'(?P<class_methods>.*?)'
     __cls_end = '(?:^@end))'
-    __cls_super_class = '(?P<super_class>\w+)'
+    __cls_super_class = '(?P<super_class>\w+\s*(?:<\w+>)?)'
     __cls_attr = '({(?P<class_attrs>[^}]*)})'
     __class_impl_regex = r'(?P<class>(?:^@implementation)' + __cls_name +\
                          __cls_methods + __cls_end
@@ -57,12 +57,11 @@ class ParseObjc(object):
                             __method_decl_regex_wo_dots +\
                             r'(?:^{(?P<body>.*?)^}\ *$)' + ')'
 
-    __initial_comment_regex = r'(?P<initial_comment>^//.*//\n)'
+    __initial_comment_regex = r'(?P<initial_comment>^(?://.*?\n)+\n)'
 
     __import_block = '(?P<import_block>(?:^#import\ "\S*"(.*#import\ "\S*")?))'
 
     __define_block = r'(?P<define_block>#define(?:\ .*?){2}$)'
-    #__define_block = r'(?P<define_block>^#define(?:\ .*?)$)*'
 
     __param_regex = r'\((?P<param_type>\w+\s*\*?)\)\s*(?P<param_name>\w+)'
 
@@ -104,12 +103,20 @@ class ParseObjc(object):
                          #pformat(cdata['class_methods']) +\
             #string += 'Methods END \n\n'
 
+        hnotparsed = self._classes['header'].get('not_parsed')
+        if hnotparsed:
+            hnotparsed = hnotparsed.strip('\n')
             string += '\n -- Not parsed in header START --\n \t\t' +\
-                 cdata['header']['not_parsed'].strip('\n') + '\n' +\
-                  '--Not parsed in header END --\n\n'
+             hnotparsed + pformat(cdata['header']) + '\n' +\
+              '--Not parsed in header END --\n\n'
+
+        snotparsed = self._classes['source'].get('not_parsed')
+        if snotparsed:
+            #snotparsed = snotparsed.strip('\n')
             string += '\n-- Not parsed in source START --\n \t\t' +\
-                 cdata['source']['not_parsed'].strip('\n') + '\n' +\
-                  '--Not parsed in source END --\n\n'
+             snotparsed + pformat(cdata['source']) + '\n' +\
+              '--Not parsed in source END --\n\n'
+
         string += 'defines : ' + pformat(self.source_defines)
         return string
 
@@ -145,22 +152,25 @@ class ParseObjc(object):
 
         source = self.preprocess(objc)
         source = self.parse_initial_comment(source, filetype)
+
         source = self.parse_include(source, filetype)
         source = self.parse_define(source, filetype)
+
         source = self.parse_classes(source, regex_name_list, filetype)
 
         self.save_not_parsed(filetype, source)
 
     def parse_initial_comment(self, source, filetype):
         return self.parse_regex(source, ParseObjc.__initial_comment_regex,
-                                filetype + '_init_comment')
+                                filetype + '_init_comment', re.DOTALL)
 
     def parse_include(self, source, filetype):
         return self.parse_regex(source, ParseObjc.__import_block,
-                                filetype + '_include_block')
+                                filetype + '_include_block',
+                                 re.DOTALL | re.MULTILINE)
 
-    def parse_regex(self, source, regex, attrname):
-        rgx = re.compile(regex, re.DOTALL | re.MULTILINE)
+    def parse_regex(self, source, regex, attrname, reflags):
+        rgx = re.compile(regex, reflags)
 
         source_text = source
         for m in rgx.finditer(source):
@@ -252,8 +262,8 @@ class ParseObjc(object):
         #else:
             #method_data['interface'] = False
 
-
-        method_data['method_name_key'] = self.contruct_method_name_key(method_data['method_name'],
+        method_data['method_name_key'] =\
+                 self.contruct_method_name_key(method_data['method_name'],
                                      method_params)
 
         #print method_data['method_name_key']
@@ -364,7 +374,7 @@ class ParseObjc(object):
             #yield k, v
 
         for k, v in sorted(self._classes[class_name].iteritems(),
-                     key=lambda (k,v): v['order']):
+                     key=lambda (k, v): v['order']):
             yield k, v
 
     def list_methods_of_class(self, class_name):

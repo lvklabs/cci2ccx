@@ -33,6 +33,7 @@ class CppTranslate(object):
 
     def __init__(self, parseObjc):
         self.data = parseObjc
+        #print parseObjc
         self.header_file_name = None
         self.equivalent_dict = ({'YES': 'true', 'NO': 'false', 'BOOL': 'bool',
             'CGSize': 'CCSize', 'CGRect': 'CCRect', 'CGPoint': 'CCPoint',
@@ -92,20 +93,29 @@ class CppTranslate(object):
 
             v = dict(v)
             v['class_name'] = class_name
-            class_methods_dict = dict(v['class_methods'])
 
-            v['class_methods_private'] = self.get_methods(class_name,
+            #pprint(v)
+            if v.get('class_methods'):
+                class_methods_dict = dict(v.get('class_methods'))
+
+                v['class_methods_private'] = self.get_methods(class_name,
                                                             class_methods_dict,
-                                                            True)
-            v['class_methods_public'] = self.get_methods(class_name,
-                                                         class_methods_dict,
-                                                            False)
+                                                                True)
+                v['class_methods_public'] = self.get_methods(class_name,
+                                                             class_methods_dict,
+                                                                False)
+            else:
+                #TODO log this insted of print
+                print "There is no method in header"
+                v['class_methods_private'] = ''
+                v['class_methods_public'] = ''
+
             if v.get('class_attrs'):
                 v['class_attrs'] = self.construct_attr(v['class_attrs'])
             else:
                 v['class_attrs'] = ''
 
-            not_parsed = v['header'].get('not_parsed').strip('\n')
+            not_parsed = v.get('header').get('not_parsed')
 
             if not_parsed:
                 v['not_parsed'] = not_parsed
@@ -122,7 +132,10 @@ class CppTranslate(object):
         classes = ''
         for class_name, v in self.data.get_classes():
 
-            not_parsed = v['source'].get('not_parsed').strip('\n')
+            not_parsed = v['source'].get('not_parsed')
+
+            if not_parsed:
+                not_parsed = not_parsed.strip('\n')
 
             classes += self.fill_template('class_impl_start_template',
                                         {'class_name': class_name,
