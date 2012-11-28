@@ -8,8 +8,7 @@ $not_parsed
 */
 
 public:
-    bool virtual init();
-    static $class_name create();
+    static $class_name* create();
 
 $class_methods_public
 

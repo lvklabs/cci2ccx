@@ -115,10 +115,10 @@ class CppTranslate(object):
             else:
                 v['class_attrs'] = ''
 
-            not_parsed = v.get('header').get('not_parsed')
-
-            if not_parsed:
-                v['not_parsed'] = not_parsed
+            if v.get('header') and v.get('header').get('not_parsed'):
+                v['not_parsed'] = v.get('header').get('not_parsed')
+            else:
+                v['not_parsed'] = ''
 
             classes += self.fill_template('class_decl_template', dict(v))
 
@@ -174,6 +174,10 @@ class CppTranslate(object):
         #TODO: maybe order methods by name or other criteria
 
         method_decl = ''
+
+        if methods.get('init'):
+            method_decl += '    bool virtual init();\n'
+            methods.pop('init')
 
         for k, v in methods.iteritems():
             method_decl += '    '

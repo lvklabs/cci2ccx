@@ -88,7 +88,8 @@ class ParseObjc(object):
         string = ''
         for cls, cdata in self._classes.iteritems():
             string += cls + '\n'
-            string += '\t BaseClassName \n \t\t' + cdata['super_class'] + '\n'
+            string += '\t BaseClassName \n \t\t' +\
+                     pformat(cdata['super_class']) + '\n'
             string += '\t methods_count \n \t\t' +\
                      str(cdata['methods_count']) + '\n'
             string += '\t class atributes \n \t\t' +\
