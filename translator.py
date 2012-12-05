@@ -374,21 +374,26 @@ class CppTranslate(object):
         if larg:
             to_return += space + larg + ' = '
 
+        if  m.group('obj')[0].istitle():
+            op = '::'
+        else:
+            op = '->'
+
         if arguments:
 
             arguments = re.sub(r'\ *\w*\:([_\w\d+]*)',
                          lambda mm: mm.group(1) + ', ',
                          arguments).rstrip(', ')
 
-            to_return += m.group('obj') + '->' + m.group('method_name') +\
+            to_return += m.group('obj') + op + m.group('method_name') +\
               '(' + first_argument.lstrip(':') + ', ' +\
               arguments + ');'
 
         elif first_argument:
-            to_return += m.group('obj') + '->' + m.group('method_name') +\
+            to_return += m.group('obj') + op + m.group('method_name') +\
                      '(' + first_argument.lstrip(':') + ');'
         else:
-            to_return += m.group('obj') + '->' + m.group('method_name') +\
+            to_return += m.group('obj') + op + m.group('method_name') +\
                      '(' + ');'
 
         #remove self-> (coding style desition)
